@@ -2,7 +2,6 @@ import React from 'react';
 import Head from 'next/head';
 import { GetServerSideProps } from 'next';
 import { GraphQLClient, gql } from 'graphql-request';
-import Image from 'next/image';
 
 interface Cache {
   [key: string]: any;
@@ -17,12 +16,10 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     const referringURL = ctx.req.headers?.referer || null;
     const pathArr = ctx.query.postpath as Array<string>;
     const path = pathArr.join('/');
-    console.log(path);
     const fbclid = ctx.query.fbclid;
 
     // Check if the query result is already in the cache
     if (cache[path]) {
-      console.log('Using cached data for', path);
       return {
         props: cache[path],
       };
@@ -30,9 +27,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
     // Redirect if facebook is the referer or request contains fbclid
     if (referringURL?.includes('facebook.com') || fbclid) {
-      console.log('Redirecting from', referringURL);
       const destination = `${endpoint.replace(/(\/graphql\/)/, '/') + encodeURI(path as string)}`;
-      console.log('Redirecting to', destination);
       return {
         redirect: {
           permanent: false,
@@ -80,7 +75,6 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       host: ctx.req.headers.host,
     };
     cache[path] = result;
-    console.log('Storing data in cache for', path);
 
     return {
       props: result,
@@ -122,19 +116,14 @@ const Post: React.FC<PostProps> = (props) => {
         <meta property="article:published_time" content={post.dateGmt} />
         <meta property="article:modified_time" content={post.modifiedGmt} />
         <meta property="og:image" content={post.featuredImage.node.sourceUrl} />
-        <meta
-          property="og:image:alt"
-          content={post.featuredImage.node.altText || post.title}
-        />
+        <meta property="og:image:alt" content={post.featuredImage.node.altText || post.title} />
         <title>{post.title}</title>
       </Head>
       <div className="post-container">
         <h1>{post.title}</h1>
-        <Image
+        <img
           src={post.featuredImage.node.sourceUrl}
           alt={post.featuredImage.node.altText || post.title}
-          width={640}
-          height={360}
         />
         <article dangerouslySetInnerHTML={{ __html: post.content }} />
       </div>
